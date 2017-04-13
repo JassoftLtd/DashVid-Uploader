@@ -30,7 +30,7 @@ jobs:
       image_resource:
         type: docker-image
         source:
-          repository: golang
+          repository: docker
 
       inputs:
       - name: source-code
