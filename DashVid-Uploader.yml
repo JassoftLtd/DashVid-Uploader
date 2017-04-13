@@ -1,0 +1,58 @@
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
+
+resources:
+- name: source-code
+  type: git
+  source:
+    uri: https://github.com/JassoftLtd/DashVid-Uploader.git
+    branch: master
+
+- name: slack-alert
+  type: slack-notification
+  source:
+    url: {{slack_webhook_url}}
+
+jobs:
+- name: DashVid-Uploader
+  plan:
+  - get: source-code
+    trigger: true
+
+  - task: Build
+    config:
+      platform: linux
+
+      image_resource:
+        type: docker-image
+        source:
+          repository: golang
+
+      inputs:
+      - name: source-code
+
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          cd source-code
+          docker run -v $(pwd)/DashVid:/src centurylink/golang-builder-cross:latest
+    on_failure:
+      put: slack-alert
+      params:
+        channel: '#build-notifications'
+        text: |
+          Build Failed. Check it out at:
+          http://concourse.jassoft.co.uk:8080/builds/$BUILD_ID
+
+  - put: slack-alert
+    params:
+      channel: '#build-notifications'
+      text: |
+        Production Deployment Successful. Check it out at:
+        http://concourse.jassoft.co.uk:8080/builds/$BUILD_ID
