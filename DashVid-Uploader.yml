@@ -12,6 +12,13 @@ resources:
     uri: https://github.com/JassoftLtd/DashVid-Uploader.git
     branch: master
 
+- name: gh-release
+  type: github-release
+  source:
+    owner: JassoftLtd
+    repository: DashVid-Uploader
+    access_token: {{gh_access_token}}
+
 - name: slack-alert
   type: slack-notification
   source:
@@ -36,6 +43,9 @@ jobs:
       inputs:
       - name: source-code
 
+      outputs:
+      - name: artifact
+
       run:
         path: sh
         args:
@@ -45,6 +55,12 @@ jobs:
           start_docker
           cd source-code
           docker run -v $(pwd)/DashVid:/src centurylink/golang-builder-cross
+          ls -ltrh DashVid
+          mkdir ../artifact/bin
+          cp DashVid/DashVid-Uploader* ../artifact/bin
+          echo "name" > ../artifact/name
+          echo "tag" > ../artifact/tag
+          echo "body" > ../artifact/body
     on_failure:
       put: slack-alert
       params:
@@ -52,6 +68,16 @@ jobs:
         text: |
           Build Failed. Check it out at:
           http://concourse.jassoft.co.uk:8080/builds/$BUILD_ID
+
+  - put: gh-release
+    inputs:
+    - name: artifact
+    params:
+      name: artifact/name
+      tag: artifact/tag
+      body: artifact/body
+      globs:
+      - artifact/bin/*
 
   - put: slack-alert
     params:
