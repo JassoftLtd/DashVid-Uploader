@@ -12,6 +12,15 @@ resources:
     uri: https://github.com/JassoftLtd/DashVid-Uploader.git
     branch: master
 
+- name: version
+  type: semver
+  source:
+    driver: git
+    uri: git@github.com:JassoftLtd/DashVid-Uploader.git
+    branch: version
+    file: version
+    private_key: {{concourse-repo-private-key}}
+
 - name: gh-release
   type: github-release
   source:
@@ -29,6 +38,8 @@ jobs:
   plan:
   - get: source-code
     trigger: true
+  - get: version
+    params: {bump: minor}
 
   - task: Build
     privileged: true
@@ -58,9 +69,6 @@ jobs:
           ls -ltrh DashVid
           mkdir ../artifact/bin
           cp DashVid/DashVid-Uploader* ../artifact/bin
-          echo "name" > ../artifact/name
-          echo "tag" > ../artifact/tag
-          echo "body" > ../artifact/body
     on_failure:
       put: slack-alert
       params:
@@ -73,15 +81,17 @@ jobs:
     inputs:
     - name: artifact
     params:
-      name: artifact/name
-      tag: artifact/tag
-      body: artifact/body
+      name: version/version
+      tag: version/version
       globs:
       - artifact/bin/*
+
+  - put: version
+    params: {file: version/version}
 
   - put: slack-alert
     params:
       channel: '#build-notifications'
       text: |
-        Production Deployment Successful. Check it out at:
+        DashVid Uploader Deployment Successful. Check it out at:
         http://concourse.jassoft.co.uk:8080/builds/$BUILD_ID
