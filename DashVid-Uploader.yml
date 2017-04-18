@@ -15,7 +15,7 @@ resources:
 - name: gh-release
   type: github-release
   source:
-    owner: JassoftLtd
+    user: JassoftLtd
     repository: DashVid-Uploader
     access_token: {{gh_access_token}}
 
