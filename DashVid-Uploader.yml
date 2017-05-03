@@ -65,7 +65,8 @@ jobs:
           source /docker-lib.sh
           start_docker
           cd source-code
-          docker run -v $(pwd)/DashVid:/src centurylink/golang-builder-cross
+          docker run -e BUILD_GOOS="linux darwin windows" -e BUILD_GOARCH="386 amd64" -v $(pwd)/DashVid:/src jonnyshaw89/golang-builder
+          docker run -e BUILD_GOOS="linux" -e BUILD_GOARCH="arm" -v $(pwd)/DashVid:/src jonnyshaw89/golang-builder
           ls -ltrh DashVid
           mkdir ../artifact/bin
           cp DashVid/DashVid-Uploader* ../artifact/bin
