@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-const baseUrl = "https://8rl323guq7.execute-api.eu-west-1.amazonaws.com/Dev/v1/"
+const baseUrl = "https://api.dashvid.io/v1/"
 
 type LoginResponse struct {
 	Login      bool
