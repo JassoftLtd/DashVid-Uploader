@@ -31,6 +31,7 @@ type CreateVideoResponse struct {
 
 type MyProvider struct {
 	cameraKey string
+	expirationTime time.Time
 }
 
 func (m *MyProvider) Retrieve() (credentials.Value, error) {
@@ -74,6 +75,8 @@ func (m *MyProvider) Retrieve() (credentials.Value, error) {
 		panic(err)
 	}
 
+	m.expirationTime = *credential.Credentials.Expiration
+
 	return credentials.Value{
 		AccessKeyID:     *credential.Credentials.AccessKeyId,
 		SecretAccessKey: *credential.Credentials.SecretKey,
@@ -82,6 +85,10 @@ func (m *MyProvider) Retrieve() (credentials.Value, error) {
 	}, nil
 }
 func (m *MyProvider) IsExpired() bool {
+	if m.expirationTime.Before(time.Now()) {
+		return true
+	}
+
 	return false
 }
 
@@ -101,7 +108,7 @@ func uploadFile(directory string, file os.FileInfo, url string) bool {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Println("failed making request")
+		fmt.Println("failed uploading file:", file.Name(), "Error:", err)
 	}
 
 	return resp.StatusCode == 200
